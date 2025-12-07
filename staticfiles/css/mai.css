@@ -1,0 +1,12 @@
+.scroll-container {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    cursor: grab;
+}
+
+.listing-card {
+    flex: 0 0 250px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}

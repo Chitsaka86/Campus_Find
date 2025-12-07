@@ -61,10 +61,11 @@ ROOT_URLCONF = 'roomify.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -125,8 +126,22 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [str(BASE_DIR / 'static')]
+STATIC_ROOT = str(BASE_DIR / 'staticfiles')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = str(BASE_DIR / 'media')
+
+# Email Configuration
+# For development (emails printed to console) - uncomment to test locally
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Gmail SMTP Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'michellechitsaka6@gmail.com'  # Your Gmail address (e.g., 'yourname@gmail.com')
+EMAIL_HOST_PASSWORD = 'zoxmqftpaztjlitp'  # Your Gmail App Password (NOT your regular password)
+DEFAULT_FROM_EMAIL = 'michellechitsaka6@gmail.com'  # Same as EMAIL_HOST_USER

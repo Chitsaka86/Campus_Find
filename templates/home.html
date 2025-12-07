@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Slider Section -->
+<div class="slider">
+    <div class="slide"><img src="{% static 'images/slider1.jpg' %}" alt="Slide 1"></div>
+    <div class="slide"><img src="{% static 'images/slider2.jpg' %}" alt="Slide 2"></div>
+    <div class="slide"><img src="{% static 'images/slider3.jpg' %}" alt="Slide 3"></div>
+    <div class="slider-text">
+        <h2>Your Perfect Stay Awaits</h2>
+        <p>Book and move into your ideal home effortlessly</p>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="stats">
+    <div>Houses: {{ stats.houses }}</div>
+    <div>Hostels: {{ stats.hostels }}</div>
+    <div>Apartments: {{ stats.apartments }}</div>
+    <div>Roommates: {{ stats.roommates }}</div>
+</div>
+
+<!-- Recent Listings Section -->
+<div class="recent-listings">
+    <h2>Recent Listings</h2>
+    <div class="scroll-container">
+        {% for house in recent_listings %}
+        <div class="listing-card">
+            {% if house.images.first %}
+                <img src="{{ house.images.first.image.url }}" alt="{{ house.title }}">
+            {% else %}
+                <img src="{% static 'images/placeholder.jpg' %}" alt="{{ house.title }}">
+            {% endif %}
+            <div class="info">
+                <h3>{{ house.title }}</h3>
+                <p>{{ house.location }}</p>
+                <p>Ksh {{ house.price }} / month</p>
+                <p>{{ house.category }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p>No listings available yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Services Section -->
+<div class="services">
+    <h2>Our Services</h2>
+    <div class="service-cards">
+        <div class="service-card">
+            <img src="{% static 'images/services/house_booking.jpg' %}" alt="House Booking">
+            <h3>House Booking</h3>
+            <p>Book your ideal home quickly and securely through our platform</p>
+        </div>
+        <div class="service-card">
+            <img src="{% static 'images/services/transport.jpg' %}" alt="Transport Services">
+            <h3>Transport Services</h3>
+            <p>Enjoy reliable transport options to move into your new home</p>
+        </div>
+        <div class="service-card">
+            <img src="{% static 'images/services/movers.jpg' %}" alt="Movers">
+            <h3>Movers</h3>
+            <p>We connect you with movers to make your relocation stress-free</p>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps">
+        <div class="step">Step 1: Search - Find available houses, apartments, or roommates near your campus</div>
+        <div class="step">Step 2: Book - Choose your preferred property and book instantly</div>
+        <div class="step">Step 3: Book Mover - Schedule movers to help you relocate easily</div>
+        <div class="step">Step 4: Find Transport - Arrange transport to your new location with ease</div>
+    </div>
+</div>
+
+<!-- Ratings Graph -->
+<div class="ratings">
+    <h2>User Ratings</h2>
+    <canvas id="ratingsChart"></canvas>
+</div>
+
+{% endblock %}
