@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="booking-action-container">
+    <div class="action-box">
+        {% if action == 'approve' %}
+            <h2>Approve Booking Request</h2>
+            <div class="icon success-icon">✓</div>
+            <p class="action-message">Are you sure you want to approve this booking request?</p>
+        {% else %}
+            <h2>Reject Booking Request</h2>
+            <div class="icon reject-icon">✗</div>
+            <p class="action-message">Are you sure you want to reject this booking request?</p>
+        {% endif %}
+        
+        <div class="booking-summary">
+            {% if booking.property.images.first %}
+                <img src="{{ booking.property.images.first.image.url }}" alt="{{ booking.property.title }}">
+            {% else %}
+                <div class="no-image">No Image</div>
+            {% endif %}
+            
+            <div class="summary-details">
+                <h3>{{ booking.property.title }}</h3>
+                <p><strong>Location:</strong> {{ booking.property.location }}</p>
+                <p><strong>Tenant:</strong> {{ booking.tenant_name }}</p>
+                <p><strong>Phone:</strong> {{ booking.tenant_phone }}</p>
+                <p><strong>Email:</strong> {{ booking.tenant_email }}</p>
+                <p><strong>Move-in Date:</strong> {{ booking.move_in_date|date:"M d, Y" }}</p>
+                <p><strong>Lease Duration:</strong> {{ booking.lease_duration_months }} months</p>
+                {% if booking.message %}
+                    <div class="message-box">
+                        <strong>Tenant's Message:</strong>
+                        <p>{{ booking.message }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <form method="post" class="action-form">
+            {% csrf_token %}
+            {% if action == 'approve' %}
+                <button type="submit" class="btn btn-success btn-large">Yes, Approve Booking</button>
+            {% else %}
+                <button type="submit" class="btn btn-danger btn-large">Yes, Reject Booking</button>
+            {% endif %}
+            <a href="{% url 'manage_bookings' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<style>
+.booking-action-container {
+    max-width: 600px;
+    margin: 4rem auto;
+    padding: 2rem;
+}
+
+.action-box {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.action-box h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.icon {
+    text-align: center;
+    font-size: 4rem;
+    margin: 1rem 0;
+}
+
+.success-icon {
+    color: #28a745;
+}
+
+.reject-icon {
+    color: #dc3545;
+}
+
+.action-message {
+    text-align: center;
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.booking-summary {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.booking-summary img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.no-image {
+    width: 100%;
+    height: 200px;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: #999;
+    margin-bottom: 1rem;
+}
+
+.summary-details h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.summary-details p {
+    margin: 0.5rem 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.message-box {
+    background: #e3f2fd;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-top: 1rem;
+    border-left: 4px solid #1976d2;
+}
+
+.message-box p {
+    margin: 0.5rem 0 0;
+    font-style: italic;
+    color: #555;
+}
+
+.action-form {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+</style>
+{% endblock %}

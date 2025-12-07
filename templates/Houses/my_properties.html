@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="my-properties-container">
+    <div class="header-section">
+        <h2>My Properties</h2>
+        <a href="{% url 'add_property' %}" class="btn btn-primary">+ Add New Property</a>
+    </div>
+    
+    {% if properties %}
+        <div class="properties-grid">
+            {% for property in properties %}
+                <div class="property-card">
+                    {% if property.images.first %}
+                        <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}">
+                    {% else %}
+                        <div class="no-image">No Image</div>
+                    {% endif %}
+                    
+                    <div class="property-info">
+                        <h3>{{ property.title }}</h3>
+                        <p class="category">{{ property.get_category_display }}</p>
+                        <p class="price">KSh {{ property.price }}/month</p>
+                        <p class="location">📍 {{ property.location }}</p>
+                        <p class="rooms">🛏️ {{ property.number_of_rooms }} Room{{ property.number_of_rooms|pluralize }}</p>
+                        
+                        <div class="property-actions">
+                            <a href="{% url 'edit_property' property.pk %}" class="btn btn-small">Edit</a>
+                            <a href="{% url 'delete_property' property.pk %}" class="btn btn-small btn-danger">Delete</a>
+                            <span class="status {% if property.is_available %}available{% else %}unavailable{% endif %}">
+                                {% if property.is_available %}Available{% else %}Unavailable{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No Properties Yet</h3>
+            <p>Start listing your properties to connect with potential tenants!</p>
+            <a href="{% url 'add_property' %}" class="btn btn-primary">Add Your First Property</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.my-properties-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-section h2 {
+    color: #667eea;
+    margin: 0;
+}
+
+.properties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.property-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.property-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.property-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.no-image {
+    width: 100%;
+    height: 200px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+.property-info {
+    padding: 1.5rem;
+}
+
+.property-info h3 {
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.category {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.price {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #667eea;
+    margin: 0.5rem 0;
+}
+
+.location, .rooms {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0.25rem 0;
+}
+
+.property-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    align-items: center;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.status {
+    margin-left: auto;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status.available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.unavailable {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.empty-state h3 {
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}

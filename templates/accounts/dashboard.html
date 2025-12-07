@@ -9,38 +9,121 @@
     </div>
 
     <div class="dashboard-content">
+        <!-- Quick Stats -->
         <div class="dashboard-section">
             <h3>Quick Stats</h3>
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Bookings</div>
+                    <div class="stat-number">{{ stats.total_properties }}</div>
+                    <div class="stat-label">Total Properties</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Saved Properties</div>
+                    <div class="stat-number">{{ stats.available_properties }}</div>
+                    <div class="stat-label">Available</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number">0</div>
-                    <div class="stat-label">Messages</div>
+                    <div class="stat-number">{{ stats.total_views }}</div>
+                    <div class="stat-label">Photos</div>
                 </div>
             </div>
         </div>
 
+        <!-- Actions -->
         <div class="dashboard-section">
             <h3>Actions</h3>
             <div class="action-buttons">
+                <a href="{% url 'add_property' %}" class="btn btn-primary">+ Add Property</a>
+                <a href="{% url 'my_properties' %}" class="btn">View All Properties</a>
+                <a href="{% url 'my_bookings' %}" class="btn">My Bookings</a>
+                <a href="{% url 'manage_bookings' %}" class="btn">Manage Bookings</a>
                 <a href="{% url 'home' %}" class="btn">Browse Houses</a>
                 <a href="{% url 'profile' %}" class="btn">Edit Profile</a>
                 <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
             </div>
         </div>
+
+        <!-- Recent Properties -->
+        {% if properties %}
+        <div class="dashboard-section">
+            <h3>Your Recent Properties</h3>
+            <div class="properties-grid">
+                {% for property in properties %}
+                <div class="property-card">
+                    {% if property.images.first %}
+                        <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}" class="property-image">
+                    {% else %}
+                        <div class="no-image">No Image</div>
+                    {% endif %}
+                    
+                    <div class="property-details">
+                        <div class="property-header">
+                            <h4>{{ property.title }}</h4>
+                            <span class="status {% if property.is_available %}available{% else %}unavailable{% endif %}">
+                                {% if property.is_available %}Available{% else %}Unavailable{% endif %}
+                            </span>
+                        </div>
+                        
+                        <p class="category">{{ property.get_category_display }}</p>
+                        
+                        <div class="property-info-grid">
+                            <div class="info-item">
+                                <span class="label">Price:</span>
+                                <span class="value">KSh {{ property.price }}/month</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Location:</span>
+                                <span class="value">{{ property.location }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Rooms:</span>
+                                <span class="value">{{ property.number_of_rooms }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Units:</span>
+                                <span class="value">{{ property.available_units }} / {{ property.total_units }} available</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Phone:</span>
+                                <span class="value">{{ property.contact_phone }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if property.amenities %}
+                        <div class="amenities-list">
+                            <strong>Amenities:</strong>
+                            <div class="amenity-tags">
+                                {% for amenity in property.get_amenities_list %}
+                                    <span class="tag">{{ amenity }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <p class="description">{{ property.description|truncatewords:20 }}</p>
+                        
+                        <div class="property-actions">
+                            <a href="{% url 'edit_property' property.pk %}" class="btn btn-small">Edit</a>
+                            <a href="{% url 'delete_property' property.pk %}" class="btn btn-small btn-danger">Delete</a>
+                            <span class="images-count">{{ property.images.count }} photo{{ property.images.count|pluralize }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="dashboard-section empty-state">
+            <h3>No Properties Yet</h3>
+            <p>Start listing your properties to connect with potential tenants!</p>
+            <a href="{% url 'add_property' %}" class="btn btn-primary">Add Your First Property</a>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <style>
 .dashboard-container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 2rem auto;
     padding: 2rem;
 }
@@ -78,6 +161,8 @@
     margin-bottom: 1.5rem;
     color: #333;
     font-size: 1.5rem;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
 }
 
 .stats-grid {
@@ -87,23 +172,22 @@
 }
 
 .stat-card {
-    background: #f8f9fa;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
     padding: 1.5rem;
     border-radius: 8px;
     text-align: center;
-    border: 1px solid #e0e0e0;
 }
 
 .stat-number {
     font-size: 2.5rem;
     font-weight: bold;
-    color: #667eea;
     margin-bottom: 0.5rem;
 }
 
 .stat-label {
     font-size: 0.9rem;
-    color: #666;
+    opacity: 0.9;
 }
 
 .action-buttons {
@@ -117,6 +201,198 @@
     min-width: 150px;
     text-align: center;
     padding: 1rem;
+}
+
+.properties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.property-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.property-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.property-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.no-image {
+    width: 100%;
+    height: 200px;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 1.1rem;
+}
+
+.property-details {
+    padding: 1.5rem;
+}
+
+.property-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.5rem;
+}
+
+.property-header h4 {
+    margin: 0;
+    color: #333;
+    flex: 1;
+}
+
+.status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-left: 0.5rem;
+}
+
+.status.available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.unavailable {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.category {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.property-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item .label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.info-item .value {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.amenities-list {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.amenities-list strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.amenity-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag {
+    background: #e8eaf6;
+    color: #3f51b5;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+
+.description {
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.property-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.images-count {
+    margin-left: auto;
+    font-size: 0.85rem;
+    color: #666;
+    background: #f0f0f0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 5px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem !important;
+}
+
+.empty-state h3 {
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .properties-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        flex: none;
+    }
 }
 </style>
 {% endblock %}

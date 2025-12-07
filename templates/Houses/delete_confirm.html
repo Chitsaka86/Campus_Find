@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="delete-confirm-container">
+    <div class="delete-confirm-box">
+        <h2>Delete Property</h2>
+        <div class="warning-icon">⚠️</div>
+        
+        <p class="warning-text">Are you sure you want to delete this property?</p>
+        
+        <div class="property-summary">
+            {% if house.images.first %}
+                <img src="{{ house.images.first.image.url }}" alt="{{ house.title }}">
+            {% else %}
+                <div class="no-image">No Image</div>
+            {% endif %}
+            
+            <div class="summary-info">
+                <h3>{{ house.title }}</h3>
+                <p><strong>Location:</strong> {{ house.location }}</p>
+                <p><strong>Price:</strong> KSh {{ house.price }}/month</p>
+                <p><strong>Category:</strong> {{ house.get_category_display }}</p>
+            </div>
+        </div>
+        
+        <div class="warning-message">
+            <p><strong>This action cannot be undone!</strong></p>
+            <p>All photos and details associated with this property will be permanently deleted.</p>
+        </div>
+        
+        <form method="post" class="delete-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, Delete Property</button>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<style>
+.delete-confirm-container {
+    max-width: 500px;
+    margin: 4rem auto;
+    padding: 2rem;
+}
+
+.delete-confirm-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.delete-confirm-box h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.warning-icon {
+    text-align: center;
+    font-size: 3rem;
+    margin: 1rem 0;
+}
+
+.warning-text {
+    text-align: center;
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.property-summary {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.property-summary img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.no-image {
+    width: 150px;
+    height: 150px;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: #999;
+}
+
+.summary-info h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.summary-info p {
+    margin: 0.5rem 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.warning-message {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+}
+
+.warning-message p {
+    margin: 0.5rem 0;
+    color: #856404;
+}
+
+.warning-message strong {
+    color: #721c24;
+}
+
+.delete-form {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+</style>
+{% endblock %}

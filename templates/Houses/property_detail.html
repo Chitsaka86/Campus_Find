@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="property-detail-container">
+    <!-- Property Images -->
+    <div class="property-images-section">
+        {% if property.images.all %}
+            <div class="main-image">
+                <img src="{{ property.images.first.image.url }}" alt="{{ property.title }}" id="mainImage">
+            </div>
+            {% if property.images.count > 1 %}
+            <div class="thumbnail-images">
+                {% for image in property.images.all %}
+                    <img src="{{ image.image.url }}" alt="Thumbnail" onclick="changeMainImage('{{ image.image.url }}')">
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-image-container">
+                <p>No images available</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Property Details -->
+    <div class="property-info-section">
+        <div class="property-header">
+            <h1>{{ property.title }}</h1>
+            <span class="status {% if property.is_available %}available{% else %}unavailable{% endif %}">
+                {% if property.is_available %}Available{% else %}Not Available{% endif %}
+            </span>
+        </div>
+        
+        <div class="price-location">
+            <div class="price">
+                <h2 class="price-amount">KSh {{ property.price }}</h2>
+                <p class="price-period">per month</p>
+            </div>
+            <div class="location">
+                <p><strong>📍 Location:</strong> {{ property.location }}</p>
+            </div>
+        </div>
+        
+        <!-- Property Stats -->
+        <div class="property-stats">
+            <div class="stat">
+                <span class="stat-icon">🛏️</span>
+                <div>
+                    <p class="stat-label">Rooms</p>
+                    <p class="stat-value">{{ property.number_of_rooms }}</p>
+                </div>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">🏷️</span>
+                <div>
+                    <p class="stat-label">Category</p>
+                    <p class="stat-value">{{ property.get_category_display }}</p>
+                </div>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">🏢</span>
+                <div>
+                    <p class="stat-label">Available Units</p>
+                    <p class="stat-value">{{ property.available_units }} / {{ property.total_units }}</p>
+                </div>
+            </div>
+            <div class="stat">
+                <span class="stat-icon">📸</span>
+                <div>
+                    <p class="stat-label">Photos</p>
+                    <p class="stat-value">{{ property.images.count }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Amenities -->
+        {% if property.amenities %}
+        <div class="amenities-section">
+            <h3>Amenities</h3>
+            <div class="amenities-list">
+                {% for amenity in property.get_amenities_list %}
+                    <span class="amenity-tag">✓ {{ amenity }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Description -->
+        <div class="description-section">
+            <h3>Description</h3>
+            <p>{{ property.description }}</p>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="contact-section">
+            <h3>Contact Landlord</h3>
+            <div class="contact-info">
+                <p><strong>📞 Phone:</strong> {{ property.contact_phone }}</p>
+                {% if property.contact_email %}
+                    <p><strong>📧 Email:</strong> {{ property.contact_email }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Booking Section -->
+        <div class="booking-section">
+            {% if existing_booking %}
+                <div class="alert alert-info">
+                    <h3>You have already booked this property!</h3>
+                    <p>Status: <strong class="status-badge {{ existing_booking.status }}">{{ existing_booking.get_status_display }}</strong></p>
+                    <a href="{% url 'my_bookings' %}" class="btn">View My Bookings</a>
+                </div>
+            {% elif property.is_available %}
+                <h3>Interested in this property?</h3>
+                <form method="post" action="{% url 'create_booking' property.id %}" class="booking-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="tenant_name">Your Full Name *</label>
+                        <input type="text" id="tenant_name" name="tenant_name" required placeholder="Enter your full name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tenant_email">Email Address *</label>
+                        <input type="email" id="tenant_email" name="tenant_email" required placeholder="your.email@example.com" value="{{ user.email }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tenant_phone">Phone Number *</label>
+                        <input type="tel" id="tenant_phone" name="tenant_phone" required placeholder="+254 712 345 678">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="move_in_date">Intended Move-in Date *</label>
+                            <input type="date" id="move_in_date" name="move_in_date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lease_duration_months">Lease Duration (Months) *</label>
+                            <select id="lease_duration_months" name="lease_duration_months" required>
+                                <option value="3">3 months</option>
+                                <option value="6">6 months</option>
+                                <option value="12" selected>12 months</option>
+                                <option value="24">24 months</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Message to Landlord (Optional)</label>
+                        <textarea id="message" name="message" rows="4" placeholder="Tell the landlord about yourself..."></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-large">Submit Booking Request</button>
+                </form>
+            {% else %}
+                <div class="alert alert-warning">
+                    <h3>Property Not Available</h3>
+                    <p>This property is currently not available for booking.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.property-detail-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+}
+
+.property-images-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.main-image {
+    width: 100%;
+    height: 400px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-image-container {
+    width: 100%;
+    height: 400px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+.thumbnail-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 1rem;
+}
+
+.thumbnail-images img {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.3s;
+}
+
+.thumbnail-images img:hover {
+    border-color: #667eea;
+}
+
+.property-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.property-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+}
+
+.property-header h1 {
+    margin: 0;
+    color: #333;
+    font-size: 2rem;
+}
+
+.status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status.available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.unavailable {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.price-location {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.price {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 10px;
+}
+
+.price-amount {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.price-period {
+    margin: 0.5rem 0 0;
+    opacity: 0.9;
+}
+
+.location {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.property-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.stat-icon {
+    font-size: 2rem;
+}
+
+.stat-label {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.stat-value {
+    margin: 0;
+    color: #333;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.amenities-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.amenities-section h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.amenities-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.amenity-tag {
+    background: #e8eaf6;
+    color: #3f51b5;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+}
+
+.description-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.description-section h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.contact-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.contact-section h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.contact-info p {
+    margin: 0.5rem 0;
+    color: #666;
+}
+
+.booking-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.booking-section h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.booking-form {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+}
+
+.alert {
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+}
+
+.alert h3 {
+    margin-top: 0;
+}
+
+.alert-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.9rem;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+@media (max-width: 768px) {
+    .property-detail-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .price-location {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function changeMainImage(imageUrl) {
+    document.getElementById('mainImage').src = imageUrl;
+}
+
+// Set minimum date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const moveInDate = document.getElementById('move_in_date');
+    if (moveInDate) {
+        const today = new Date().toISOString().split('T')[0];
+        moveInDate.min = today;
+    }
+});
+</script>
+{% endblock %}

@@ -25,26 +25,213 @@
 <!-- Recent Listings Section -->
 <div class="recent-listings">
     <h2>Recent Listings</h2>
-    <div class="scroll-container">
+    <div class="recent-properties-grid">
         {% for house in recent_listings %}
-        <div class="listing-card">
+        <div class="property-card">
             {% if house.images.first %}
-                <img src="{{ house.images.first.image.url }}" alt="{{ house.title }}">
+                <img src="{{ house.images.first.image.url }}" alt="{{ house.title }}" class="property-image">
             {% else %}
-                <img src="{% static 'images/placeholder.jpg' %}" alt="{{ house.title }}">
+                <div class="no-image">No Image</div>
             {% endif %}
-            <div class="info">
-                <h3>{{ house.title }}</h3>
-                <p>{{ house.location }}</p>
-                <p>Ksh {{ house.price }} / month</p>
-                <p>{{ house.category }}</p>
+            
+            <div class="property-details">
+                <div class="property-header">
+                    <h4>{{ house.title }}</h4>
+                    <span class="status {% if house.is_available %}available{% else %}unavailable{% endif %}">
+                        {% if house.is_available %}Available{% else %}Unavailable{% endif %}
+                    </span>
+                </div>
+                
+                <p class="category">{{ house.get_category_display }}</p>
+                
+                <div class="property-info-grid">
+                    <div class="info-item">
+                        <span class="label">Price:</span>
+                        <span class="value">KSh {{ house.price }}/month</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Location:</span>
+                        <span class="value">{{ house.location }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Rooms:</span>
+                        <span class="value">{{ house.number_of_rooms }}</span>
+                    </div>
+                </div>
+                
+                {% if house.amenities %}
+                <div class="amenities-list">
+                    <strong>Amenities:</strong>
+                    <div class="amenity-tags">
+                        {% for amenity in house.get_amenities_list %}
+                            <span class="tag">{{ amenity }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <p class="description">{{ house.description|truncatewords:15 }}</p>
+                
+                <a href="{% url 'property_detail' house.pk %}" class="btn btn-small">View Details</a>
             </div>
         </div>
         {% empty %}
-        <p>No listings available yet.</p>
+        <p style="grid-column: 1/-1; text-align: center; padding: 2rem;">No listings available yet.</p>
         {% endfor %}
     </div>
 </div>
+
+<style>
+.recent-properties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.property-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.property-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.property-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+.no-image {
+    width: 100%;
+    height: 200px;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+.property-details {
+    padding: 1.5rem;
+}
+
+.property-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.5rem;
+}
+
+.property-header h4 {
+    margin: 0;
+    color: #333;
+    flex: 1;
+    font-size: 1.1rem;
+}
+
+.status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-left: 0.5rem;
+}
+
+.status.available {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.unavailable {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.category {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+}
+
+.property-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item .label {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.info-item .value {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.amenities-list {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.amenities-list strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.amenity-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag {
+    background: #e8eaf6;
+    color: #3f51b5;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+}
+
+.description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+</style>
 
 <!-- Services Section -->
 <div class="services">

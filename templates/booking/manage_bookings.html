@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="manage-bookings-container">
+    <h2>Manage Bookings</h2>
+    
+    <!-- Booking Stats -->
+    <div class="booking-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ bookings|length }}</div>
+            <div class="stat-label">Total Requests</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ pending }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ approved }}</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ rejected }}</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+    </div>
+    
+    <!-- Bookings List -->
+    {% if bookings %}
+        <div class="bookings-grid">
+            {% for booking in bookings %}
+            <div class="booking-card {% if booking.status == 'pending' %}pending{% endif %}">
+                {% if booking.property.images.first %}
+                    <img src="{{ booking.property.images.first.image.url }}" alt="{{ booking.property.title }}" class="booking-image">
+                {% else %}
+                    <div class="no-image">No Image</div>
+                {% endif %}
+                
+                <div class="booking-details">
+                    <div class="property-header">
+                        <h3>{{ booking.property.title }}</h3>
+                        <span class="status-badge {{ booking.status }}">{{ booking.get_status_display }}</span>
+                    </div>
+                    
+                    <p class="location">📍 {{ booking.property.location }}</p>
+                    
+                    <div class="tenant-info">
+                        <h4>Tenant Information</h4>
+                        <div class="info-row">
+                            <span class="label">Name:</span>
+                            <span class="value">{{ booking.tenant_name }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Email:</span>
+                            <span class="value">{{ booking.tenant_email }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Phone:</span>
+                            <span class="value">{{ booking.tenant_phone }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="booking-info">
+                        <div class="info-row">
+                            <span class="label">Intended Move-in:</span>
+                            <span class="value">{{ booking.move_in_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Lease Duration:</span>
+                            <span class="value">{{ booking.lease_duration_months }} months</span>
+                        </div>
+                    </div>
+                    
+                    {% if booking.message %}
+                    <div class="message-section">
+                        <p><strong>Tenant's Message:</strong></p>
+                        <p class="message-text">{{ booking.message }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="booking-actions">
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'approve_booking' booking.id %}" class="btn btn-small btn-success">Approve</a>
+                            <a href="{% url 'reject_booking' booking.id %}" class="btn btn-small btn-danger">Reject</a>
+                        {% else %}
+                            <span class="action-badge">{{ booking.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <small class="booking-date">Requested on {{ booking.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No Booking Requests</h3>
+            <p>You'll see booking requests from tenants here once they start booking your properties.</p>
+            <a href="{% url 'my_properties' %}" class="btn btn-primary">View My Properties</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.manage-bookings-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.manage-bookings-container h2 {
+    color: #667eea;
+    margin-bottom: 2rem;
+}
+
+.booking-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.bookings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.booking-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-left: 4px solid #999;
+}
+
+.booking-card.pending {
+    border-left-color: #ffc107;
+}
+
+.booking-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.booking-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.no-image {
+    width: 100%;
+    height: 200px;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+.booking-details {
+    padding: 1.5rem;
+}
+
+.property-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.property-header h3 {
+    margin: 0;
+    color: #333;
+    flex: 1;
+}
+
+.location {
+    color: #666;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.tenant-info {
+    background: #f0f7ff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #1976d2;
+}
+
+.tenant-info h4 {
+    margin-top: 0;
+    color: #1976d2;
+    font-size: 0.95rem;
+}
+
+.booking-info {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.info-row:last-child {
+    margin-bottom: 0;
+}
+
+.info-row .label {
+    color: #666;
+    font-weight: 500;
+}
+
+.info-row .value {
+    color: #333;
+    text-align: right;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.message-section {
+    background: #e8f5e9;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #4caf50;
+}
+
+.message-section p {
+    margin: 0.25rem 0;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.message-text {
+    font-style: italic;
+    color: #555;
+}
+
+.booking-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    flex: 1;
+    text-align: center;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.3s;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.action-badge {
+    background: #f0f0f0;
+    color: #666;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.booking-date {
+    display: block;
+    color: #999;
+    font-size: 0.85rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.empty-state h3 {
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}

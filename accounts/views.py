@@ -111,5 +111,21 @@ def profile(request):
 
 @login_required(login_url='register')
 def dashboard(request):
-    """User dashboard"""
-    return render(request, 'accounts/dashboard.html')
+    """User dashboard with property listings"""
+    from houses.models import House
+    
+    # Get landlord's properties
+    properties = House.objects.filter(landlord=request.user).order_by('-created_at')
+    
+    # Get stats
+    stats = {
+        'total_properties': properties.count(),
+        'available_properties': properties.filter(is_available=True).count(),
+        'total_views': sum(p.images.count() for p in properties),  # Placeholder
+    }
+    
+    context = {
+        'properties': properties,
+        'stats': stats,
+    }
+    return render(request, 'accounts/dashboard.html', context)

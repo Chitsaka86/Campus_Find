@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="cancel-booking-container">
+    <div class="cancel-box">
+        <h2>Cancel Booking</h2>
+        <div class="warning-icon">⚠️</div>
+        <p class="warning-text">Are you sure you want to cancel this booking request?</p>
+        
+        <div class="booking-summary">
+            {% if booking.property.images.first %}
+                <img src="{{ booking.property.images.first.image.url }}" alt="{{ booking.property.title }}">
+            {% else %}
+                <div class="no-image">No Image</div>
+            {% endif %}
+            
+            <div class="summary-details">
+                <h3>{{ booking.property.title }}</h3>
+                <p><strong>Location:</strong> {{ booking.property.location }}</p>
+                <p><strong>Price:</strong> KSh {{ booking.property.price }}/month</p>
+                <p><strong>Move-in Date:</strong> {{ booking.move_in_date|date:"M d, Y" }}</p>
+                <p><strong>Lease Duration:</strong> {{ booking.lease_duration_months }} months</p>
+                <p><strong>Status:</strong> <span class="status-badge {{ booking.status }}">{{ booking.get_status_display }}</span></p>
+            </div>
+        </div>
+        
+        <div class="info-message">
+            <p><strong>Note:</strong> This action cannot be undone. You can always make a new booking request later.</p>
+        </div>
+        
+        <form method="post" class="cancel-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-large">Yes, Cancel Booking</button>
+            <a href="{% url 'my_bookings' %}" class="btn btn-secondary">Go Back</a>
+        </form>
+    </div>
+</div>
+
+<style>
+.cancel-booking-container {
+    max-width: 500px;
+    margin: 4rem auto;
+    padding: 2rem;
+}
+
+.cancel-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.cancel-box h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.warning-icon {
+    text-align: center;
+    font-size: 3rem;
+    margin: 1rem 0;
+}
+
+.warning-text {
+    text-align: center;
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.booking-summary {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.booking-summary img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.no-image {
+    width: 100%;
+    height: 150px;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: #999;
+    margin-bottom: 1rem;
+}
+
+.summary-details h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.summary-details p {
+    margin: 0.5rem 0;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.info-message {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+}
+
+.info-message p {
+    margin: 0;
+    color: #856404;
+    font-size: 0.9rem;
+}
+
+.cancel-form {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-large {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+</style>
+{% endblock %}
