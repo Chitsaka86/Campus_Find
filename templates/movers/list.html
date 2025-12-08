@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="movers-container">
+    <div class="movers-header">
+        <div>
+            <h1>Moving & Cleaning Services</h1>
+            <p>Find trusted movers. See ratings. Book with confidence.</p>
+        </div>
+    </div>
+
+    <form method="get" class="filter-row">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search by name or location">
+        <label class="checkbox-inline">
+            <input type="checkbox" name="cleaning" value="1" {% if cleaning %}checked{% endif %}> Cleaning offered
+        </label>
+        <button class="btn" type="submit">Filter</button>
+        <a class="btn-secondary" href="{% url 'movers_list' %}">Clear</a>
+    </form>
+
+    {% if services %}
+    <div class="mover-grid">
+        {% for service in services %}
+        <div class="mover-card">
+            <div class="mover-card-header">
+                <div>
+                    <h3>{{ service.name }}</h3>
+                    <p class="location">{{ service.location }}</p>
+                </div>
+                {% if service.provides_cleaning %}
+                    <span class="chip green">Cleaning</span>
+                {% endif %}
+            </div>
+            <p class="desc">{{ service.description|truncatewords:20 }}</p>
+            <div class="meta-row">
+                <span class="chip">Rate per km: KSh {{ service.rate_per_km }}</span>
+                <span class="chip">📞 {{ service.phone }}</span>
+            </div>
+            <div class="rating-row">
+                <span class="stars">⭐ {{ service.avg_rating|default:0|floatformat:1 }}/5</span>
+                <span class="count">({{ service.rating_count }} ratings)</span>
+            </div>
+            <a class="btn-outline" href="{% url 'mover_detail' service.pk %}">View & Rate</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty">No movers found. Try clearing filters.</div>
+    {% endif %}
+</div>
+
+<style>
+.movers-container{
+    max-width:1100px;
+    margin:2rem auto;
+    padding:1rem 1.5rem;
+}
+.movers-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:1rem;
+    margin-bottom:1.5rem;
+}
+.filter-row{
+    display:flex;
+    gap:0.75rem;
+    flex-wrap:wrap;
+    margin-bottom:1rem;
+    align-items:center;
+}
+.filter-row input[type=text]{
+    padding:0.7rem;
+    border:2px solid #e0e0e0;
+    border-radius:8px;
+    min-width:220px;
+}
+.checkbox-inline{
+    display:flex;
+    align-items:center;
+    gap:0.4rem;
+    font-size:0.95rem;
+}
+.btn{
+    background:#667eea;
+    color:white;
+    padding:0.7rem 1.1rem;
+    border-radius:8px;
+    text-decoration:none;
+    border:none;
+    cursor:pointer;
+}
+.btn-secondary{
+    background:#f0f0f0;
+    color:#333;
+    padding:0.7rem 1.1rem;
+    border-radius:8px;
+    text-decoration:none;
+}
+.btn-outline{
+    display:inline-block;
+    padding:0.6rem 1rem;
+    border:1px solid #667eea;
+    color:#667eea;
+    border-radius:8px;
+    text-decoration:none;
+    margin-top:0.5rem;
+}
+.mover-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:1rem;
+}
+.mover-card{
+    background:white;
+    border-radius:10px;
+    padding:1rem;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    display:flex;
+    flex-direction:column;
+    gap:0.5rem;
+}
+.mover-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:0.75rem;
+}
+.location{
+    color:#666;
+    margin:0;
+}
+.desc{
+    color:#555;
+    line-height:1.4;
+}
+.meta-row{
+    display:flex;
+    gap:0.5rem;
+    flex-wrap:wrap;
+    font-size:0.9rem;
+}
+.chip{
+    background:#eef2ff;
+    color:#4c51bf;
+    padding:0.35rem 0.65rem;
+    border-radius:12px;
+    display:inline-block;
+}
+.chip.green{
+    background:#e6ffed;
+    color:#0f9d58;
+}
+.rating-row{
+    display:flex;
+    gap:0.4rem;
+    align-items:center;
+    color:#555;
+    font-weight:600;
+}
+.stars{
+    color:#f6ad55;
+}
+.empty{
+    text-align:center;
+    color:#666;
+    padding:2rem;
+    background:white;
+    border-radius:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    } 
+</style>
+{% endblock %}

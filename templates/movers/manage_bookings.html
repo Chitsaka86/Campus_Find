@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="manage-mover-bookings">
+    <h1>Manage Mover Bookings</h1>
+    {% if bookings %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Tenant</th>
+                    <th>Pickup</th>
+                    <th>Dropoff</th>
+                    <th>Distance (km)</th>
+                    <th>Cost</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.tenant_name }}<br>{{ booking.tenant_phone }}<br>{{ booking.tenant_email }}</td>
+                    <td>{{ booking.pickup_location }}</td>
+                    <td>{{ booking.dropoff_location }}</td>
+                    <td>{{ booking.distance_km }}</td>
+                    <td>KSh {{ booking.total_cost }}</td>
+                    <td>{{ booking.get_status_display }}</td>
+                    <td>
+                        {% if booking.status == 'pending' %}
+                        <form method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="booking_id" value="{{ booking.id }}">
+                            <button name="action" value="approve" class="btn btn-success">Approve</button>
+                            <button name="action" value="reject" class="btn btn-danger">Reject</button>
+                        </form>
+                        {% else %}
+                        <span class="badge badge-info">{{ booking.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No mover bookings to manage.</p>
+    {% endif %}
+</div>
+<style>
+.manage-mover-bookings { max-width: 900px; margin: 2rem auto; }
+.table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+.table th, .table td { border: 1px solid #eee; padding: 1rem; text-align: left; }
+.table th { background: #f8f9fa; }
+.btn-success { background: #4caf50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; margin-right: 0.5rem; }
+.btn-danger { background: #dc3545; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; }
+.badge-info { background: #2196f3; color: white; padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.95rem; }
+</style>
+{% endblock %}

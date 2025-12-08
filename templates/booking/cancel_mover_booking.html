@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="cancel-container">
+    <h1>Cancel Mover Booking</h1>
+    
+    <div class="booking-info">
+        <h3>{{ mover_booking.mover.name }}</h3>
+        <p>Pick-up: <strong>{{ mover_booking.pickup_location }}</strong></p>
+        <p>Drop-off: <strong>{{ mover_booking.dropoff_location }}</strong></p>
+        <p>Cost: <strong>KSh {{ mover_booking.total_cost }}</strong></p>
+    </div>
+    
+    <div class="warning-box">
+        <p>⚠️ Are you sure you want to cancel this mover booking?</p>
+        <p>You will not be able to recover this booking once cancelled.</p>
+    </div>
+    
+    <form method="post" class="cancel-form">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Yes, Cancel Booking</button>
+            <a href="{% url 'my_mover_bookings' %}" class="btn btn-secondary">No, Keep It</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.cancel-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.cancel-container h1 {
+    color: #dc3545;
+    margin-bottom: 2rem;
+}
+
+.booking-info {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+}
+
+.booking-info h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.booking-info p {
+    margin: 0.5rem 0;
+    color: #555;
+}
+
+.warning-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.warning-box p {
+    margin: 0.5rem 0;
+    color: #856404;
+}
+
+.cancel-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+</style>
+{% endblock %}

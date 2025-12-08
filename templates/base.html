@@ -13,10 +13,20 @@
             <h1>Campus Find</h1>
             <ul>
                 <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'movers_list' %}">Movers</a></li>
                 <li><a href="#">About Us</a></li>
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li><a href="{% url 'profile' %}">Profile</a></li>
+                    <li class="profile-menu">
+                        <a href="{% url 'profile' %}" class="profile-link">
+                            {% if user.profile.profile_picture %}
+                                <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}" class="profile-thumb">
+                            {% else %}
+                                <div class="profile-thumb placeholder">{{ user.username|upper|first }}</div>
+                            {% endif %}
+                            <span class="username">{{ user.first_name|default:user.username }}</span>
+                        </a>
+                    </li>
                     <li><a href="{% url 'logout' %}">Logout</a></li>
                 {% else %}
                     <li><a href="#" onclick="openRegistrationModal(event)">Get Started</a></li>

@@ -107,25 +107,85 @@ def logout(request):
 
 @login_required(login_url='register')
 def profile(request):
-    return render(request, 'accounts/profile.html')
+    from .models import UserProfile
+    
+    # Get or create profile
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        bio = request.POST.get('bio', '').strip()
+        
+        # Check if email is already taken by another user
+        if email != request.user.email and User.objects.filter(email=email).exists():
+            messages.error(request, 'This email is already in use.')
+            return redirect('profile')
+        
+        try:
+            request.user.first_name = first_name
+            request.user.last_name = last_name
+            request.user.email = email
+            request.user.save()
+            
+            profile.phone = phone
+            profile.bio = bio
+            
+            # Handle profile picture upload
+            if 'profile_picture' in request.FILES:
+                profile.profile_picture = request.FILES['profile_picture']
+            
+            profile.save()
+            
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+        except Exception as e:
+            messages.error(request, f'Error updating profile: {str(e)}')
+            return redirect('profile')
+    
+    context = {
+        'user': request.user,
+        'profile': profile
+    }
+    return render(request, 'accounts/profile.html', context)
 
 @login_required(login_url='register')
 def dashboard(request):
     """User dashboard with property listings"""
     from houses.models import House
+    from booking.models import Booking
     
     # Get landlord's properties
     properties = House.objects.filter(landlord=request.user).order_by('-created_at')
+    
+    # Check if user is a landlord (has properties)
+    is_landlord = properties.exists()
+    
+    # Get tenant bookings
+    tenant_bookings = Booking.objects.filter(tenant=request.user).order_by('-created_at')
+    
+    # Get landlord bookings (bookings for their properties)
+    landlord_bookings = Booking.objects.filter(property__landlord=request.user).order_by('-created_at')
     
     # Get stats
     stats = {
         'total_properties': properties.count(),
         'available_properties': properties.filter(is_available=True).count(),
-        'total_views': sum(p.images.count() for p in properties),  # Placeholder
+        'total_photos': sum(p.images.count() for p in properties),
+        'tenant_bookings': tenant_bookings.count(),
+        'pending_tenant_bookings': tenant_bookings.filter(status='pending').count(),
+        'approved_tenant_bookings': tenant_bookings.filter(status='approved').count(),
+        'landlord_bookings': landlord_bookings.count(),
+        'pending_landlord_bookings': landlord_bookings.filter(status='pending').count(),
     }
     
     context = {
         'properties': properties,
         'stats': stats,
+        'is_landlord': is_landlord,
+        'recent_tenant_bookings': tenant_bookings[:3],
+        'recent_landlord_bookings': landlord_bookings[:3],
     }
     return render(request, 'accounts/dashboard.html', context)

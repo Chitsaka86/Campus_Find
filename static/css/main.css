@@ -4,6 +4,12 @@
     box-sizing: border-box;
 }
 
+/* Remove underlines from all buttons */
+button, .btn, a.btn, a.btn-primary, a.btn-secondary, a.btn-danger, a.btn-outline, 
+a.btn-small, input[type="submit"], input[type="button"] {
+    text-decoration: none !important;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
@@ -35,16 +41,58 @@ header nav ul {
     list-style: none;
     display: flex;
     gap: 2rem;
+    align-items: center;
 }
 
-header nav a {
+header nav li a {
+    text-decoration: none;
+}
+
+header nav li a:hover {
+    text-decoration: none;
+}
+
+.profile-menu {
+    margin-left: auto;
+}
+
+.profile-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     color: white;
     text-decoration: none;
     transition: opacity 0.3s;
 }
 
-header nav a:hover {
+.profile-link:hover {
     opacity: 0.8;
+}
+
+.profile-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+}
+
+.profile-thumb.placeholder {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    border: 2px solid white;
+}
+
+.username {
+    font-weight: 600;
+    font-size: 0.95rem;
 }
 
 main {

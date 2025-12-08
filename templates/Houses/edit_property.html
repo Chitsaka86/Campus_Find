@@ -105,7 +105,7 @@
                     {% for image in house.images.all %}
                         <div class="image-item">
                             <img src="{{ image.image.url }}" alt="{{ house.title }}">
-                            <a href="#" class="delete-btn" data-image-id="{{ image.id }}" onclick="deleteImage(event, {{ image.id }})">Delete</a>
+                            <button type="button" class="delete-btn" onclick="deleteImage({{ image.id }}, '{{ image.image.name }}')" title="Delete image">✕</button>
                         </div>
                     {% endfor %}
                 </div>
@@ -338,12 +338,43 @@
 </style>
 
 <script>
+// Delete image function
+function deleteImage(imageId, imageName) {
+    if (confirm(`Delete this image? (${imageName})`)) {
+        const form = new FormData();
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(`{% url 'delete_property_image' image_id=0 %}`.replace('0', imageId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            }
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+}
+
 // Image preview for new uploads
 document.getElementById('images').addEventListener('change', function(e) {
     const preview = document.getElementById('imagePreview');
     preview.innerHTML = '';
     
     const files = Array.from(e.target.files);
+    
+    // Show count
+    const countDiv = document.createElement('div');
+    countDiv.style.marginBottom = '1rem';
+    countDiv.style.padding = '1rem';
+    countDiv.style.background = '#e8f5e9';
+    countDiv.style.borderRadius = '8px';
+    countDiv.style.color = '#2e7d32';
+    countDiv.style.fontWeight = '600';
+    countDiv.innerHTML = `📷 ${files.length} new image(s) to add`;
+    preview.appendChild(countDiv);
+    
     files.forEach(file => {
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -354,13 +385,5 @@ document.getElementById('images').addEventListener('change', function(e) {
         reader.readAsDataURL(file);
     });
 });
-
-function deleteImage(e, imageId) {
-    e.preventDefault();
-    if (confirm('Delete this photo?')) {
-        // In production, you'd send an AJAX request to delete the image
-        console.log('Delete image:', imageId);
-    }
-}
 </script>
 {% endblock %}

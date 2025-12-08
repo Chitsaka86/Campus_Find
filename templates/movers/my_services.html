@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="movers-container">
+    <div class="movers-header">
+        <div>
+            <h1>My Moving Services</h1>
+            <p>Manage the services you offer.</p>
+        </div>
+        <a class="btn" href="{% url 'add_mover' %}">+ Add Another Service</a>
+    </div>
+
+    {% if services %}
+    <div class="mover-grid">
+        {% for service in services %}
+        <div class="mover-card">
+            <div class="mover-card-header">
+                <div>
+                    <h3>{{ service.name }}</h3>
+                    <p class="location">{{ service.location }}</p>
+                </div>
+                {% if service.provides_cleaning %}
+                    <span class="chip green">Cleaning</span>
+                {% endif %}
+            </div>
+            <p class="desc">{{ service.description|truncatewords:20 }}</p>
+            <div class="meta-row">
+                <span class="chip">Rate per km: KSh {{ service.rate_per_km }}</span>
+                <span class="chip">📞 {{ service.phone }}</span>
+            </div>
+            <div class="rating-row">
+                <span class="stars">⭐ {{ service.avg_rating|default:0|floatformat:1 }}/5</span>
+                <span class="count">({{ service.rating_count }} ratings)</span>
+            </div>
+            <div class="actions">
+                <a class="btn-outline" href="{% url 'edit_mover' service.pk %}">Edit Info</a>
+                <a class="btn-outline" href="{% url 'mover_manage_bookings' %}">Manage Bookings</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty">You have not added any mover services yet.</div>
+    {% endif %}
+</div>
+
+<style>
+.movers-container{ max-width:1100px; margin:2rem auto; padding:1rem 1.5rem; }
+.movers-header{ display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1.5rem; }
+.mover-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; }
+.mover-card{ border:1px solid #eee; border-radius:12px; padding:1rem; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+.mover-card-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem; }
+.location{ color:#666; margin:0; }
+.desc{ color:#444; min-height:50px; }
+.meta-row,.rating-row,.actions{ display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem; }
+.chip{ background:#eef2ff; color:#4c51bf; padding:0.35rem 0.65rem; border-radius:12px; }
+.chip.green{ background:#e6ffed; color:#0f9d58; }
+.stars{ color:#f6ad55; font-weight:700; }
+.btn-outline{ border:1px solid #667eea; color:#667eea; padding:0.5rem 0.9rem; border-radius:8px; text-decoration:none; }
+.btn{ background:#667eea; color:white; padding:0.7rem 1rem; border-radius:8px; text-decoration:none; }
+.empty{ padding:2rem; text-align:center; color:#666; border:1px dashed #ddd; border-radius:10px; }
+</style>
+{% endblock %}

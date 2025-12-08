@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="action-container">
+    <h1>Approve Mover Booking</h1>
+    
+    <div class="booking-info">
+        <h3>{{ mover_booking.tenant_name }}</h3>
+        <p>📞 {{ mover_booking.tenant_phone }}</p>
+        <p>✉️ {{ mover_booking.tenant_email }}</p>
+        <hr>
+        <p><strong>Pick-up:</strong> {{ mover_booking.pickup_location }}</p>
+        <p><strong>Drop-off:</strong> {{ mover_booking.dropoff_location }}</p>
+        <p><strong>Distance:</strong> {{ mover_booking.distance_km }} km</p>
+        <p><strong>Amount:</strong> KSh {{ mover_booking.total_cost }}</p>
+    </div>
+    
+    <div class="info-box">
+        <p>✓ By approving this booking, the tenant will be notified and can proceed with the moving service.</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">Approve Booking</button>
+            <a href="{% url 'mover_manage_bookings' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.action-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.action-container h1 {
+    color: #667eea;
+    margin-bottom: 2rem;
+}
+
+.booking-info {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+}
+
+.booking-info h3 {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.booking-info p {
+    margin: 0.5rem 0;
+    color: #555;
+}
+
+.booking-info hr {
+    margin: 1rem 0;
+    border: none;
+    border-top: 1px solid #eee;
+}
+
+.info-box {
+    background: #d4edda;
+    border-left: 4px solid #28a745;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.info-box p {
+    color: #155724;
+    margin: 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+</style>
+{% endblock %}

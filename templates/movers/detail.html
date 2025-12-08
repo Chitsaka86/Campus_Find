@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mover-detail">
+    <div class="header">
+        <div>
+            <h1>{{ service.name }}</h1>
+            <p class="location">{{ service.location }}</p>
+            <div class="chips">
+                <span class="chip">Rate per km: KSh {{ service.rate_per_km }}</span>
+                {% if service.provides_cleaning %}<span class="chip green">Cleaning Offered</span>{% endif %}
+            </div>
+        </div>
+        <div class="rating-box">
+            <div class="score">{{ service.avg_rating|default:0|floatformat:1 }}</div>
+            <div class="label">Average ({{ service.rating_count }} ratings)</div>
+        </div>
+    </div>
+
+    <p class="description">{{ service.description }}</p>
+
+    <div class="contact">
+        <p>📞 {{ service.phone }}</p>
+        {% if service.email %}<p>✉️ {{ service.email }}</p>{% endif %}
+        {% if user.is_authenticated %}
+            <a href="{% url 'book_mover' service.pk %}" class="btn btn-primary">Book This Mover</a>
+        {% else %}
+            <p><a href="{% url 'register' %}" class="btn btn-primary">Sign in to Book</a></p>
+        {% endif %}
+    </div>
+
+    <div class="ratings-section">
+        <h3>Ratings</h3>
+        {% if user.is_authenticated %}
+            {% if service.owner == user %}
+                <p class="muted">You cannot rate your own service.</p>
+            {% else %}
+            <form method="post" class="rate-form">
+                {% csrf_token %}
+                <label for="score">Your Rating (1-5)</label>
+                <select id="score" name="score" required>
+                    {% for i in "12345" %}
+                    <option value="{{ i }}">{{ i }}</option>
+                    {% endfor %}
+                </select>
+                <label for="comment">Comment (optional)</label>
+                <textarea id="comment" name="comment" rows="3" placeholder="Share your experience"></textarea>
+                <button class="btn" type="submit">Submit Rating</button>
+            </form>
+            {% endif %}
+        {% else %}
+            <p><a class="btn" href="{% url 'login' %}">Log in to rate</a></p>
+        {% endif %}
+
+        {% if ratings %}
+            <div class="rating-list">
+                {% for rating in ratings %}
+                <div class="rating-card">
+                    <div class="rating-header">
+                        <strong>{{ rating.user.username }}</strong>
+                        <span class="stars">⭐ {{ rating.score }}/5</span>
+                    </div>
+                    {% if rating.comment %}<p class="comment">{{ rating.comment }}</p>{% endif %}
+                    <small class="date">{{ rating.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="muted">No ratings yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.mover-detail{
+    max-width:900px;
+    margin:2rem auto;
+    padding:1.5rem;
+    background:white;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+} 
+.header{
+    display:flex;
+    justify-content:space-between;
+    gap:1rem;
+    align-items:flex-start;
+    margin-bottom:1rem;
+}
+.location{
+    color:#666;
+    margin:0;
+}
+.chips{
+    display:flex;
+    gap:0.5rem;
+    flex-wrap:wrap;
+    margin-top:0.5rem;
+}
+.chip{
+    background:#eef2ff;
+    color:#4c51bf;
+    padding:0.35rem 0.65rem;
+    border-radius:12px;
+}
+.chip.green{
+    background:#e6ffed;
+    color:#0f9d58;
+}
+.rating-box{
+    background:#f8f9ff;
+    padding:1rem 1.25rem;
+    border-radius:10px;
+    text-align:center;
+    min-width:140px;
+}
+.rating-box .score{
+    font-size:2.4rem;
+    font-weight:700;
+    color:#4c51bf;
+}
+.rating-box .label{
+    color:#666;
+    font-size:0.9rem;
+}
+.description{
+    color:#444;
+    line-height:1.6;
+    margin-bottom:1rem;
+}
+.contact p{
+    margin:0.1rem 0;
+    color:#333;
+    font-weight:600;
+}
+.contact .btn-primary{
+    margin-top:1rem;
+    display:inline-block;
+}
+.ratings-section{
+    margin-top:1.5rem;
+}
+.rate-form{
+    display:flex;
+    flex-direction:column;
+    gap:0.5rem;
+    margin-bottom:1rem;
+}
+.rate-form select, .rate-form textarea{
+    padding:0.7rem;
+    border:2px solid #e0e0e0;
+    border-radius:8px;
+}
+.btn{
+    background:#667eea;
+    color:white;
+    padding:0.7rem 1rem;
+    border-radius:8px;
+    text-decoration:none;
+    border:none;
+    cursor:pointer;
+    align-self:flex-start;
+}
+.rating-list{
+    display:flex;
+    flex-direction:column;
+    gap:0.75rem;
+}
+.rating-card{
+    border:1px solid #eee;
+    padding:0.75rem;
+    border-radius:10px;
+    background:#fbfbff;
+}
+.rating-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.comment{
+    color:#444;
+    margin:0.3rem 0;
+}
+.date{
+    color:#777;
+}
+.muted{
+    color:#777;
+}
+.stars{
+    color:#f6ad55;
+    font-weight:700;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="confirm-container">
+    <h1>Confirm Mover Booking</h1>
+    
+    <div class="booking-details">
+        <div class="detail-section">
+            <h3>Mover Details</h3>
+            <p><strong>Mover:</strong> {{ mover_booking.mover_name }}</p>
+            <p><strong>Location:</strong> {{ mover_booking.mover_location }}</p>
+            <p><strong>Phone:</strong> {{ mover_booking.mover_phone }}</p>
+            <p><strong>Rating:</strong> ⭐ {{ mover_booking.mover_rating }}/5</p>
+        </div>
+        
+        <div class="detail-section">
+            <h3>Move Details</h3>
+            <p><strong>Pick-up Location:</strong> {{ mover_booking.pickup_location }}</p>
+            <p><strong>Drop-off Location:</strong> {{ mover_booking.dropoff_location }}</p>
+            <p><strong>Distance:</strong> {{ mover_booking.distance_km }} km</p>
+        </div>
+        
+        <div class="detail-section cost">
+            <h3>Cost Breakdown</h3>
+            <div class="cost-item">
+                <span>Base Rate:</span>
+                <span>KSh {{ mover_booking.base_rate }}</span>
+            </div>
+            <div class="cost-item">
+                <span>Distance Charge ({{ mover_booking.distance_km }} km × KSh 50):</span>
+                <span>KSh {{ mover_booking.distance_charge }}</span>
+            </div>
+            <div class="cost-item total">
+                <span>Total Cost:</span>
+                <span>KSh {{ mover_booking.total_cost }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="confirmation-text">
+            <p>By confirming this booking:</p>
+            <ul>
+                <li>{{ mover_booking.mover_name }} will contact you at <strong>{{ user.email }}</strong></li>
+                <li>Your phone number will be shared: <strong>{{ user.profile.phone }}</strong></li>
+                <li>You will pay KSh {{ mover_booking.total_cost }} for this moving service</li>
+            </ul>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Confirm Booking</button>
+            <a href="{% url 'movers_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.confirm-container {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.confirm-container h1 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.booking-details {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+}
+
+.detail-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-section:last-child {
+    border-bottom: none;
+}
+
+.detail-section h3 {
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.detail-section p {
+    margin: 0.5rem 0;
+    color: #555;
+}
+
+.detail-section.cost {
+    background: #f8f9ff;
+}
+
+.cost-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.cost-item:last-child {
+    border-bottom: none;
+}
+
+.cost-item span:last-child {
+    font-weight: 600;
+    color: #667eea;
+}
+
+.cost-item.total {
+    padding-top: 1rem;
+    border-top: 2px solid #667eea;
+}
+
+.cost-item.total span:last-child {
+    font-size: 1.3rem;
+    color: #667eea;
+}
+
+.confirmation-text {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+}
+
+.confirmation-text p {
+    margin: 0 0 1rem 0;
+    color: #555;
+    font-weight: 600;
+}
+
+.confirmation-text ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.confirmation-text li {
+    padding: 0.5rem 0;
+    color: #555;
+    border-left: 3px solid #667eea;
+    padding-left: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+</style>
+{% endblock %}

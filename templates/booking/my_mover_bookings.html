@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="bookings-container">
+    <h1>My Mover Bookings</h1>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <div class="number">{{ pending }}</div>
+            <div class="label">Pending</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ confirmed }}</div>
+            <div class="label">Confirmed</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">{{ rejected }}</div>
+            <div class="label">Rejected</div>
+        </div>
+    </div>
+    
+    {% if mover_bookings %}
+        <div class="bookings-list">
+            {% for booking in mover_bookings %}
+                <div class="booking-card">
+                    <div class="booking-header">
+                        <div>
+                            <h3>{{ booking.mover.name }}</h3>
+                            <p class="mover-location">📍 {{ booking.mover.location }}</p>
+                        </div>
+                        <span class="status-badge status-{{ booking.status }}">{{ booking.get_status_display }}</span>
+                    </div>
+                    
+                    <div class="booking-details">
+                        <div class="detail-row">
+                            <span class="label">Pick-up:</span>
+                            <span class="value">{{ booking.pickup_location }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Drop-off:</span>
+                            <span class="value">{{ booking.dropoff_location }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Distance:</span>
+                            <span class="value">{{ booking.distance_km }} km</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Cost:</span>
+                            <span class="value cost">KSh {{ booking.total_cost }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="booking-footer">
+                        <small class="date">{{ booking.created_at|date:"M d, Y H:i" }}</small>
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'cancel_mover_booking' booking.pk %}" class="btn btn-danger">Cancel</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No mover bookings yet.</p>
+            <a href="{% url 'movers_list' %}" class="btn btn-primary">Browse Movers</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.bookings-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.bookings-container h1 {
+    color: #667eea;
+    margin-bottom: 1.5rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.stat-card .number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-card .label {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.bookings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.booking-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.booking-header {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #eee;
+}
+
+.booking-header h3 {
+    margin: 0 0 0.25rem 0;
+    color: #333;
+}
+
+.mover-location {
+    color: #666;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-confirmed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-cancelled {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.booking-details {
+    padding: 1.5rem;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row .label {
+    color: #666;
+    font-weight: 500;
+}
+
+.detail-row .value {
+    color: #333;
+    font-weight: 600;
+}
+
+.detail-row .cost {
+    color: #667eea;
+    font-size: 1.1rem;
+}
+
+.booking-footer {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9ff;
+    border-top: 1px solid #eee;
+}
+
+.date {
+    color: #999;
+}
+
+.btn {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.empty-state {
+    background: white;
+    padding: 3rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %}

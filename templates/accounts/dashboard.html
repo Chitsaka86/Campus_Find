@@ -13,30 +13,88 @@
         <div class="dashboard-section">
             <h3>Quick Stats</h3>
             <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number">{{ stats.total_properties }}</div>
-                    <div class="stat-label">Total Properties</div>
+                {% if is_landlord %}
+                    <div class="stat-card landlord">
+                        <div class="stat-number">{{ stats.total_properties }}</div>
+                        <div class="stat-label">My Properties</div>
+                    </div>
+                    <div class="stat-card landlord">
+                        <div class="stat-number">{{ stats.available_properties }}</div>
+                        <div class="stat-label">Available</div>
+                    </div>
+                    <div class="stat-card landlord">
+                        <div class="stat-number">{{ stats.pending_landlord_bookings }}</div>
+                        <div class="stat-label">Pending Requests</div>
+                    </div>
+                    <div class="stat-card landlord">
+                        <div class="stat-number">{{ stats.total_photos }}</div>
+                        <div class="stat-label">Photos</div>
+                    </div>
+                {% endif %}
+                
+                <div class="stat-card tenant">
+                    <div class="stat-number">{{ stats.tenant_bookings }}</div>
+                    <div class="stat-label">My Bookings</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ stats.available_properties }}</div>
-                    <div class="stat-label">Available</div>
+                <div class="stat-card tenant">
+                    <div class="stat-number">{{ stats.pending_tenant_bookings }}</div>
+                    <div class="stat-label">Pending</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{ stats.total_views }}</div>
-                    <div class="stat-label">Photos</div>
+                <div class="stat-card tenant">
+                    <div class="stat-number">{{ stats.approved_tenant_bookings }}</div>
+                    <div class="stat-label">Approved</div>
                 </div>
             </div>
         </div>
 
-        <!-- Actions -->
-        <div class="dashboard-section">
-            <h3>Actions</h3>
+        <!-- Landlord Actions -->
+        {% if is_landlord %}
+        <div class="dashboard-section landlord-section">
+            <h3>Landlord Actions</h3>
             <div class="action-buttons">
                 <a href="{% url 'add_property' %}" class="btn btn-primary">+ Add Property</a>
-                <a href="{% url 'my_properties' %}" class="btn">View All Properties</a>
-                <a href="{% url 'my_bookings' %}" class="btn">My Bookings</a>
-                <a href="{% url 'manage_bookings' %}" class="btn">Manage Bookings</a>
-                <a href="{% url 'home' %}" class="btn">Browse Houses</a>
+                <a href="{% url 'my_properties' %}" class="btn">My Properties</a>
+                <a href="{% url 'manage_bookings' %}" class="btn">
+                    Manage Bookings
+                    {% if stats.pending_landlord_bookings > 0 %}
+                        <span class="badge">{{ stats.pending_landlord_bookings }}</span>
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tenant Actions -->
+        <div class="dashboard-section tenant-section">
+            <h3>Tenant Actions</h3>
+            <div class="action-buttons">
+                <a href="{% url 'browse_properties' %}" class="btn btn-primary">Browse Properties</a>
+                <a href="{% url 'my_bookings' %}" class="btn">
+                    My Bookings
+                    {% if stats.pending_tenant_bookings > 0 %}
+                        <span class="badge">{{ stats.pending_tenant_bookings }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'my_mover_bookings' %}" class="btn">My Mover Bookings</a>
+            </div>
+        </div>
+
+        <!-- Mover Actions -->
+        {% if user.mover_services.exists %}
+        <div class="dashboard-section mover-section">
+            <h3>Mover Actions</h3>
+            <div class="action-buttons">
+                <a href="{% url 'add_mover' %}" class="btn">+ Add Mover Service</a>
+                <a href="{% url 'mover_manage_bookings' %}" class="btn btn-primary">Manage Booking Requests</a>
+                <a href="{% url 'my_mover_services' %}" class="btn">View My Service</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- General Actions -->
+        <div class="dashboard-section">
+            <h3>Account Settings</h3>
+            <div class="action-buttons">
                 <a href="{% url 'profile' %}" class="btn">Edit Profile</a>
                 <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
             </div>
@@ -179,6 +237,14 @@
     text-align: center;
 }
 
+.stat-card.landlord {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card.tenant {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
 .stat-number {
     font-size: 2.5rem;
     font-weight: bold;
@@ -188,6 +254,14 @@
 .stat-label {
     font-size: 0.9rem;
     opacity: 0.9;
+}
+
+.landlord-section h3 {
+    color: #667eea;
+}
+
+.tenant-section h3 {
+    color: #4facfe;
 }
 
 .action-buttons {
@@ -201,6 +275,23 @@
     min-width: 150px;
     text-align: center;
     padding: 1rem;
+    position: relative;
+}
+
+.badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
 }
 
 .properties-grid {

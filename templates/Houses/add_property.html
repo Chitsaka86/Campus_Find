@@ -98,13 +98,20 @@
         <div class="form-section">
             <h3>Property Photos *</h3>
             <div class="form-group">
-                <label for="images">Upload Photos (Multiple allowed)</label>
-                <input type="file" id="images" name="images" multiple accept="image/*" required>
-                <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
-                    Upload at least one photo. First photo will be the cover image.
-                </p>
+                <label for="image1">Cover Photo</label>
+                <input type="file" id="image1" name="image1" accept="image/*" required>
             </div>
-            <div id="imagePreview" class="image-preview-grid"></div>
+            <div class="form-group">
+                <label for="image2">Photo 2</label>
+                <input type="file" id="image2" name="image2" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label for="image3">Photo 3</label>
+                <input type="file" id="image3" name="image3" accept="image/*">
+            </div>
+            <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                You can add more images after saving by editing the property.
+            </p>
         </div>
         
         <!-- Contact Information -->
@@ -126,7 +133,7 @@
         
         <!-- Submit Buttons -->
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Add Property</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn">Add Property</button>
             <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
@@ -195,7 +202,16 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
-    margin-top: 1rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    min-height: 50px;
+}
+
+.image-preview-grid > div {
+    position: relative;
+    width: 100%;
 }
 
 .image-preview-grid img {
@@ -203,7 +219,11 @@
     height: 150px;
     object-fit: cover;
     border-radius: 8px;
-    border: 2px solid #e0e0e0;
+    display: block;
+}
+
+.image-preview-grid > div:first-child {
+    grid-column: 1 / -1;
 }
 
 .form-actions {
@@ -216,17 +236,70 @@
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.btn {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s;
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
 </style>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCgPwrKtBd1Sc09MVlkdbVeW91dHvL0ts&libraries=places&callback=initMap" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCgPwrKtBd1Sc09MVlkdbVeW91dHvL0ts&libraries=places" async defer></script>
 <script>
+console.log('Script loaded');
+
 let map, marker, autocomplete;
 
 function initMap() {
-    // Default to Nairobi, Kenya
     const defaultLocation = { lat: -1.2864, lng: 36.8172 };
     
-    // Initialize map
     map = new google.maps.Map(document.getElementById('map'), {
         center: defaultLocation,
         zoom: 12,
@@ -234,40 +307,26 @@ function initMap() {
         streetViewControl: false
     });
     
-    // Add click listener to map
     map.addListener('click', function(e) {
         placeMarker(e.latLng);
     });
     
-    // Initialize autocomplete on location input
     const input = document.getElementById('location');
-    autocomplete = new google.maps.places.Autocomplete(input, {
-        types: ['geocode', 'establishment'],
-        componentRestrictions: { country: 'ke' } // Restrict to Kenya
-    });
-    
-    // When user selects a place from autocomplete
+    autocomplete = new google.maps.places.Autocomplete(input);
+    autocomplete.setFields(['geometry', 'formatted_address']);
     autocomplete.addListener('place_changed', function() {
         const place = autocomplete.getPlace();
-        
-        if (!place.geometry) {
-            console.log("No details available for: '" + place.name + "'");
-            return;
+        if (place.geometry) {
+            if (place.geometry.viewport) {
+                map.fitBounds(place.geometry.viewport);
+            } else {
+                map.setCenter(place.geometry.location);
+                map.setZoom(17);
+            }
+            placeMarker(place.geometry.location);
         }
-        
-        // Center map on selected place
-        if (place.geometry.viewport) {
-            map.fitBounds(place.geometry.viewport);
-        } else {
-            map.setCenter(place.geometry.location);
-            map.setZoom(17);
-        }
-        
-        // Place marker at selected location
-        placeMarker(place.geometry.location);
     });
     
-    // Try to get user's location
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
             const userLocation = {
@@ -289,7 +348,6 @@ function placeMarker(location) {
             draggable: true
         });
         
-        // Update coordinates when marker is dragged
         marker.addListener('dragend', function(e) {
             document.getElementById('latitude').value = e.latLng.lat();
             document.getElementById('longitude').value = e.latLng.lng();
@@ -300,20 +358,84 @@ function placeMarker(location) {
     document.getElementById('longitude').value = location.lng();
 }
 
-// Image preview
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('images').addEventListener('change', function(e) {
+window.addEventListener('load', function() {
+    console.log('Page fully loaded');
+    
+    try {
+        initMap();
+        console.log('Map initialized');
+    } catch (e) {
+        console.error('Map error:', e);
+    }
+    
+    const imageInput = document.getElementById('images');
+    if (!imageInput) {
+        console.error('Image input not found');
+        return;
+    }
+    
+    console.log('Setting up image listener');
+    
+    imageInput.addEventListener('change', function(e) {
+        console.log('Change event fired');
+        
         const preview = document.getElementById('imagePreview');
+        const files = Array.from(this.files);
+        
+        console.log('Selected ' + files.length + ' files');
+        
         preview.innerHTML = '';
         
-        const files = Array.from(e.target.files);
-        files.forEach(file => {
+        if (files.length === 0) {
+            console.log('No files');
+            return;
+        }
+        
+        const countDiv = document.createElement('div');
+        countDiv.style.marginBottom = '1rem';
+        countDiv.style.padding = '1rem';
+        countDiv.style.background = '#e8f5e9';
+        countDiv.style.borderRadius = '8px';
+        countDiv.style.color = '#2e7d32';
+        countDiv.style.fontWeight = '600';
+        countDiv.innerHTML = '📷 ' + files.length + ' image(s) selected - First will be cover';
+        preview.appendChild(countDiv);
+        
+        files.forEach(function(file, index) {
             const reader = new FileReader();
             reader.onload = function(event) {
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.display = 'inline-block';
+                wrapper.style.width = '150px';
+                
                 const img = document.createElement('img');
                 img.src = event.target.result;
-                preview.appendChild(img);
-            }
+                img.style.borderRadius = '8px';
+                img.style.border = index === 0 ? '3px solid #4caf50' : '1px solid #ddd';
+                img.style.width = '100%';
+                img.style.height = '150px';
+                img.style.objectFit = 'cover';
+                img.style.display = 'block';
+                wrapper.appendChild(img);
+                
+                if (index === 0) {
+                    const badge = document.createElement('div');
+                    badge.style.position = 'absolute';
+                    badge.style.top = '10px';
+                    badge.style.left = '10px';
+                    badge.style.background = '#4caf50';
+                    badge.style.color = 'white';
+                    badge.style.padding = '0.5rem 1rem';
+                    badge.style.borderRadius = '20px';
+                    badge.style.fontSize = '0.85rem';
+                    badge.style.fontWeight = '600';
+                    badge.innerHTML = '★ COVER';
+                    wrapper.appendChild(badge);
+                }
+                
+                preview.appendChild(wrapper);
+            };
             reader.readAsDataURL(file);
         });
     });

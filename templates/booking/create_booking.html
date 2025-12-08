@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="booking-container">
+    <h1>Book {{ property.title }}</h1>
+    
+    <form method="post" class="booking-form">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h3>Your Details</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tenant_name">Full Name *</label>
+                    <input type="text" id="tenant_name" name="tenant_name" value="{{ user.get_full_name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tenant_phone">Phone Number *</label>
+                    <input type="tel" id="tenant_phone" name="tenant_phone" value="{{ user.profile.phone }}" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="tenant_email">Email *</label>
+                <input type="email" id="tenant_email" name="tenant_email" value="{{ user.email }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Message to Landlord</label>
+                <textarea id="message" name="message" rows="3" placeholder="Tell the landlord about yourself..."></textarea>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h3>Move-in Details</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="move_in_date">Move-in Date *</label>
+                    <input type="date" id="move_in_date" name="move_in_date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lease_duration_months">Lease Duration (Months)</label>
+                    <select id="lease_duration_months" name="lease_duration_months">
+                        <option value="3">3 months</option>
+                        <option value="6">6 months</option>
+                        <option value="12" selected>12 months</option>
+                        <option value="24">24 months</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h3>Moving Service (Optional)</h3>
+            <p class="info-text">Select a mover to help with your relocation</p>
+            
+            {% if movers %}
+                <div class="mover-selection">
+                    {% for mover in movers %}
+                    <div class="mover-option">
+                        <input type="radio" id="mover_{{ mover.id }}" name="mover_id" value="{{ mover.id }}">
+                        <label for="mover_{{ mover.id }}" class="mover-label">
+                            <div class="mover-info">
+                                <strong>{{ mover.name }}</strong>
+                                <span class="location">📍 {{ mover.location }}</span>
+                                <span class="rating">⭐ {{ mover.rating_summary.average|default:0|floatformat:1 }}/5 ({{ mover.rating_summary.count }} ratings)</span>
+                                <span class="rate">Base Rate: KSh {{ mover.base_rate }}</span>
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div id="mover-details" style="display: none;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pickup_location">Current Location *</label>
+                            <input type="text" id="pickup_location" name="pickup_location" placeholder="e.g., Nairobi CBD" autocomplete="off">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="dropoff_location">New Location *</label>
+                            <input type="text" id="dropoff_location" name="dropoff_location" placeholder="e.g., Westlands" autocomplete="off">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="distance_km">Distance (km) *</label>
+                        <input type="number" id="distance_km" name="distance_km" step="0.1" placeholder="e.g., 15" min="0">
+                        <small>Estimate the distance between pickup and dropoff</small>
+                    </div>
+                    
+                    <div class="cost-estimate">
+                        <p>Cost Estimate:</p>
+                        <p class="estimate-value">KSh <span id="estimate-cost">0</span></p>
+                        <small>Base Rate + (Distance × KSh 50/km)</small>
+                    </div>
+                </div>
+            {% else %}
+                <p class="info-text">No moving services available at the moment.</p>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Submit Booking</button>
+            <a href="{% url 'property_detail' property.pk %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.booking-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.form-section h3 {
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+
+.info-text {
+    color: #666;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.form-group label {
+    color: #333;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-group small {
+    color: #777;
+    font-size: 0.85rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.mover-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.mover-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.mover-option input[type="radio"] {
+    margin-top: 0.5rem;
+    cursor: pointer;
+}
+
+.mover-option input[type="radio"]:checked {
+    accent-color: #667eea;
+}
+
+.mover-option input[type="radio"]:checked + .mover-label ~ * {
+    border-color: #667eea;
+    background: #f8f9ff;
+}
+
+.mover-label {
+    flex: 1;
+    cursor: pointer;
+}
+
+.mover-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mover-info strong {
+    color: #333;
+}
+
+.location {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.rating {
+    color: #f6ad55;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.rate {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.cost-estimate {
+    background: #f8f9ff;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    margin-top: 1rem;
+}
+
+.cost-estimate p {
+    margin: 0;
+    color: #555;
+}
+
+.estimate-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #667eea;
+    margin: 0.5rem 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #e0e0e0;
+}
+</style>
+
+<script>
+document.querySelectorAll('input[name="mover_id"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        if (this.checked) {
+            document.getElementById('mover-details').style.display = 'block';
+            // Set base rate for calculation
+            window.selectedMoverBaseRate = parseFloat(this.value);
+        }
+    });
+});
+
+const distanceInput = document.getElementById('distance_km');
+if (distanceInput) {
+    distanceInput.addEventListener('input', calculateCost);
+}
+
+function calculateCost() {
+    const distance = parseFloat(distanceInput.value) || 0;
+    const baseRate = window.selectedMoverBaseRate || 0;
+    const ratePerKm = 50;
+    const total = baseRate + (distance * ratePerKm);
+    document.getElementById('estimate-cost').textContent = total.toFixed(0);
+}
+</script>
+{% endblock %}
