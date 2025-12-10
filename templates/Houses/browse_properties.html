@@ -22,9 +22,10 @@
                 </select>
             </div>
             
-            <div class="filter-group">
+            <div class="filter-group" style="position: relative;">
                 <label for="location">Location</label>
                 <input type="text" id="location" name="location" value="{{ selected_location }}" placeholder="e.g., Westlands, Nairobi" autocomplete="off">
+                <div id="locationDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #667eea; border-radius: 8px; max-height: 300px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 0.25rem;"></div>
             </div>
             
             <div class="filter-group">
@@ -383,27 +384,81 @@
 }
 </style>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCgPwrKtBd1Sc09MVlkdbVeW91dHvL0ts&libraries=places"></script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Google Maps Autocomplete for location field
     const locationInput = document.getElementById('location');
+    const dropdown = document.getElementById('locationDropdown');
+    let searchTimeout;
     
-    if (locationInput) {
-        const autocomplete = new google.maps.places.Autocomplete(locationInput, {
-            types: ['geocode', 'establishment'],
-            componentRestrictions: { country: 'ke' } // Restrict to Kenya
+    if (locationInput && dropdown) {
+        // Autocomplete as user types
+        locationInput.addEventListener('input', function(e) {
+            const query = this.value.trim();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                autocompleteLocation(query);
+            }, 300);
         });
         
-        // When user selects a place from autocomplete
-        autocomplete.addListener('place_changed', function() {
-            const place = autocomplete.getPlace();
-            if (place.formatted_address) {
-                locationInput.value = place.formatted_address;
-            } else if (place.name) {
-                locationInput.value = place.name;
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!locationInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
             }
         });
+    }
+    
+    function autocompleteLocation(query) {
+        const locationiqToken = 'YOUR_LOCATIONIQ_TOKEN_HERE';  // Get free token from https://locationiq.com
+        const url = `https://us1.locationiq.com/v1/autocomplete.php?key=${locationiqToken}&q=${encodeURIComponent(query)}&limit=8&countrycodes=ke&format=json`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    dropdown.innerHTML = '';
+                    data.forEach(item => {
+                        const option = document.createElement('div');
+                        option.style.padding = '0.75rem 1rem';
+                        option.style.cursor = 'pointer';
+                        option.style.borderBottom = '1px solid #f0f0f0';
+                        option.style.transition = 'background 0.2s';
+                        option.textContent = item.display_name;
+                        
+                        option.addEventListener('mouseenter', function() {
+                            this.style.background = '#f8f9ff';
+                        });
+                        
+                        option.addEventListener('mouseleave', function() {
+                            this.style.background = 'white';
+                        });
+                        
+                        option.addEventListener('click', function() {
+                            locationInput.value = item.display_name;
+                            dropdown.style.display = 'none';
+                        });
+                        
+                        dropdown.appendChild(option);
+                    });
+                    dropdown.style.display = 'block';
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Autocomplete error:', error);
+                dropdown.style.display = 'none';
+            });
     }
 });
 </script>

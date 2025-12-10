@@ -65,9 +65,9 @@
                         <label for="mover_{{ mover.id }}" class="mover-label">
                             <div class="mover-info">
                                 <strong>{{ mover.name }}</strong>
-                                <span class="location">📍 {{ mover.location }}</span>
-                                <span class="rating">⭐ {{ mover.rating_summary.average|default:0|floatformat:1 }}/5 ({{ mover.rating_summary.count }} ratings)</span>
-                                <span class="rate">Base Rate: KSh {{ mover.base_rate }}</span>
+                                <span class="location">{{ mover.location }}</span>
+                                <span class="rating">{{ mover.avg_rating|default:0|floatformat:1 }}/5 ({{ mover.rating_count }} ratings)</span>
+                                <span class="rate">Rate per km: KSh {{ mover.rate_per_km }}</span>
                             </div>
                         </label>
                     </div>
@@ -76,21 +76,23 @@
                 
                 <div id="mover-details" style="display: none;">
                     <div class="form-row">
-                        <div class="form-group">
+                        <div class="form-group" style="position: relative;">
                             <label for="pickup_location">Current Location *</label>
                             <input type="text" id="pickup_location" name="pickup_location" placeholder="e.g., Nairobi CBD" autocomplete="off">
+                            <div id="pickupDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #667eea; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 0.25rem;"></div>
                         </div>
                         
-                        <div class="form-group">
+                        <div class="form-group" style="position: relative;">
                             <label for="dropoff_location">New Location *</label>
                             <input type="text" id="dropoff_location" name="dropoff_location" placeholder="e.g., Westlands" autocomplete="off">
+                            <div id="dropoffDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #667eea; border-radius: 8px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 0.25rem;"></div>
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <label for="distance_km">Distance (km) *</label>
-                        <input type="number" id="distance_km" name="distance_km" step="0.1" placeholder="e.g., 15" min="0">
-                        <small>Estimate the distance between pickup and dropoff</small>
+                        <input type="number" id="distance_km" name="distance_km" step="0.1" placeholder="Auto-calculated" min="0" readonly style="background: #f5f5f5;">
+                        <small>✓ Distance automatically calculated based on locations</small>
                     </div>
                     
                     <div class="cost-estimate">
@@ -302,27 +304,174 @@
 </style>
 
 <script>
+// v1.0.1
+const locationiqToken = 'pk.93a01f276f9a30a23b45a80e206a73db';
+let pickupCoords = null;
+let dropoffCoords = null;
+let searchTimeout;
+
 document.querySelectorAll('input[name="mover_id"]').forEach(radio => {
     radio.addEventListener('change', function() {
         if (this.checked) {
             document.getElementById('mover-details').style.display = 'block';
-            // Set base rate for calculation
-            window.selectedMoverBaseRate = parseFloat(this.value);
+            const moverCard = this.closest('.mover-option');
+            const rateText = moverCard.querySelector('.rate').textContent;
+            window.selectedMoverBaseRate = parseFloat(rateText.match(/\d+/)[0]) || 0;
+            
+            // Initialize autocomplete after showing the fields
+            setTimeout(initializeAutocomplete, 100);
         }
     });
 });
 
-const distanceInput = document.getElementById('distance_km');
-if (distanceInput) {
-    distanceInput.addEventListener('input', calculateCost);
+function initializeAutocomplete() {
+    console.log('=== Initializing Autocomplete ===');
+    const pickupInput = document.getElementById('pickup_location');
+    const dropoffInput = document.getElementById('dropoff_location');
+    const pickupDropdown = document.getElementById('pickupDropdown');
+    const dropoffDropdown = document.getElementById('dropoffDropdown');
+    
+    console.log('Pickup input:', pickupInput);
+    console.log('Dropoff input:', dropoffInput);
+    console.log('Pickup dropdown:', pickupDropdown);
+    console.log('Dropoff dropdown:', dropoffDropdown);
+    
+    if (!pickupInput || !dropoffInput) {
+        console.error('Inputs not found!');
+        return;
+    }
+    
+    // Remove old listeners by cloning
+    const newPickupInput = pickupInput.cloneNode(true);
+    pickupInput.parentNode.replaceChild(newPickupInput, pickupInput);
+    const newDropoffInput = dropoffInput.cloneNode(true);
+    dropoffInput.parentNode.replaceChild(newDropoffInput, dropoffInput);
+    
+    console.log('Adding input listeners...');
+    
+    newPickupInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        console.log('Pickup input changed:', query);
+        clearTimeout(searchTimeout);
+        if (query.length < 2) {
+            pickupDropdown.style.display = 'none';
+            return;
+        }
+        console.log('Will search for:', query);
+        searchTimeout = setTimeout(() => autocomplete(query, pickupDropdown, 'pickup'), 300);
+    });
+
+    newDropoffInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        console.log('Dropoff input changed:', query);
+        clearTimeout(searchTimeout);
+        if (query.length < 2) {
+            dropoffDropdown.style.display = 'none';
+            return;
+        }
+        console.log('Will search for:', query);
+        searchTimeout = setTimeout(() => autocomplete(query, dropoffDropdown, 'dropoff'), 300);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!newPickupInput.contains(e.target) && !pickupDropdown.contains(e.target)) {
+            pickupDropdown.style.display = 'none';
+        }
+        if (!newDropoffInput.contains(e.target) && !dropoffDropdown.contains(e.target)) {
+            dropoffDropdown.style.display = 'none';
+        }
+    });
+    
+    console.log('=== Autocomplete initialized ===');
+}
+
+function autocomplete(query, dropdown, type) {
+    const url = `https://us1.locationiq.com/v1/autocomplete.php?key=${locationiqToken}&q=${encodeURIComponent(query)}&limit=8&countrycodes=ke&format=json`;
+    
+    console.log('Fetching autocomplete for:', query);
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Autocomplete results:', data);
+            if (data.length > 0) {
+                dropdown.innerHTML = '';
+                data.forEach(item => {
+                    const option = document.createElement('div');
+                    option.style.padding = '0.75rem 1rem';
+                    option.style.cursor = 'pointer';
+                    option.style.borderBottom = '1px solid #f0f0f0';
+                    option.style.transition = 'background 0.2s';
+                    option.textContent = item.display_name;
+                    
+                    option.addEventListener('mouseenter', function() {
+                        this.style.background = '#f8f9ff';
+                    });
+                    
+                    option.addEventListener('mouseleave', function() {
+                        this.style.background = 'white';
+                    });
+                    
+                    option.addEventListener('click', function() {
+                        const pickupInput = document.getElementById('pickup_location');
+                        const dropoffInput = document.getElementById('dropoff_location');
+                        
+                        if (type === 'pickup') {
+                            pickupInput.value = item.display_name;
+                            pickupCoords = { lat: parseFloat(item.lat), lng: parseFloat(item.lon) };
+                            dropdown.style.display = 'none';
+                        } else {
+                            dropoffInput.value = item.display_name;
+                            dropoffCoords = { lat: parseFloat(item.lat), lng: parseFloat(item.lon) };
+                            dropdown.style.display = 'none';
+                        }
+                        calculateDistance();
+                    });
+                    
+                    dropdown.appendChild(option);
+                });
+                dropdown.style.display = 'block';
+            } else {
+                dropdown.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Autocomplete error:', error);
+            dropdown.style.display = 'none';
+        });
+}
+
+function calculateDistance() {
+    const distanceInput = document.getElementById('distance_km');
+    if (pickupCoords && dropoffCoords && distanceInput) {
+        // Haversine formula to calculate distance between two coordinates
+        const R = 6371; // Earth's radius in km
+        const dLat = (dropoffCoords.lat - pickupCoords.lat) * Math.PI / 180;
+        const dLng = (dropoffCoords.lng - pickupCoords.lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(pickupCoords.lat * Math.PI / 180) * Math.cos(dropoffCoords.lat * Math.PI / 180) *
+                  Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        
+        console.log('Calculated distance:', distance, 'km');
+        distanceInput.value = distance.toFixed(1);
+        calculateCost();
+    }
 }
 
 function calculateCost() {
+    const distanceInput = document.getElementById('distance_km');
+    if (!distanceInput) return;
+    
     const distance = parseFloat(distanceInput.value) || 0;
     const baseRate = window.selectedMoverBaseRate || 0;
     const ratePerKm = 50;
     const total = baseRate + (distance * ratePerKm);
-    document.getElementById('estimate-cost').textContent = total.toFixed(0);
+    const costElement = document.getElementById('estimate-cost');
+    if (costElement) {
+        costElement.textContent = total.toFixed(0);
+    }
 }
 </script>
 {% endblock %}

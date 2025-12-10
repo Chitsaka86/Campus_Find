@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth import login as auth_login, logout as auth_logout, authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -9,6 +9,34 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.conf import settings
+
+def login(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
+        
+        try:
+            user = User.objects.get(email=email)
+            user = authenticate(request, username=user.username, password=password)
+            
+            if user is not None:
+                if user.is_active:
+                    auth_login(request, user)
+                    messages.success(request, f'Welcome back, {user.username}!')
+                    return redirect('dashboard')
+                else:
+                    messages.error(request, 'Your account is not active. Please verify your email.')
+            else:
+                messages.error(request, 'Invalid email or password.')
+        except User.DoesNotExist:
+            messages.error(request, 'No account found with this email.')
+        except Exception as e:
+            messages.error(request, f'Login error: {str(e)}')
+    
+    return render(request, 'accounts/login.html')
 
 def register(request):
     if request.user.is_authenticated:
@@ -23,8 +51,35 @@ def register(request):
         
         # Check if user already exists
         if User.objects.filter(email=email).exists():
-            messages.info(request, 'If an account with this email exists, you will receive a magic link shortly.')
-            return redirect('register')
+            user = User.objects.get(email=email)
+            
+            # Generate and send magic link again
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            magic_link = f"{request.build_absolute_uri(reverse('verify_email', kwargs={'uidb64': uid, 'token': token}))}"
+            
+            try:
+                send_mail(
+                    subject='Your Campus Find Magic Link',
+                    message=f'''Hello,
+
+Click the link below to verify your email and access your dashboard:
+
+{magic_link}
+
+This link will expire in 24 hours.
+
+Best regards,
+Campus Find Team''',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                messages.success(request, 'Magic link sent to your email!')
+                return redirect('register')
+            except Exception as e:
+                messages.error(request, f'Error sending email. Please try again.')
+                return redirect('register')
         
         # Create new user with email as username
         try:

@@ -130,6 +130,19 @@ def edit_mover(request, pk):
 
 
 @login_required(login_url="register")
+def delete_mover(request, pk):
+    service = get_object_or_404(MoverService, pk=pk, owner=request.user)
+    
+    if request.method == "POST":
+        service_name = service.name
+        service.delete()
+        messages.success(request, f"'{service_name}' service deleted successfully.")
+        return redirect("my_mover_services")
+    
+    return render(request, "movers/delete_confirm.html", {"service": service})
+
+
+@login_required(login_url="register")
 def manage_mover_bookings(request):
     # Only show bookings for movers owned by this user
     mover_services = MoverService.objects.filter(owner=request.user)

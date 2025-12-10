@@ -61,7 +61,7 @@ def create_booking(request, property_id):
                         pickup_location=pickup_location,
                         dropoff_location=dropoff_location,
                         distance_km=distance_km,
-                        base_rate=mover.base_rate,
+                        base_rate=float(mover.rate_per_km),
                         rate_per_km=50,  # Default rate per km
                         mover_rating=rating,
                     )
@@ -146,7 +146,7 @@ def book_mover(request, mover_id):
             rating = mover.rating_summary.get('average', 0)
             
             # Calculate total cost
-            base_rate = float(mover.base_rate)
+            base_rate = float(mover.rate_per_km)
             rate_per_km = 50
             total_cost = base_rate + (distance_km * rate_per_km)
             distance_charge = distance_km * rate_per_km
